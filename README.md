@@ -2,7 +2,29 @@
 **Fecha:** 2025-1-19  
 **Autor:** académico-productivo (Jaider Reyes Herazo)
 
-> Laboratorio académico con carácter productivo para la **Historia Clínica Electrónica Interoperable** en Colombia, integrando **datos maestros**, **validación de calidad**, **HL7-FHIR R4** y despliegue con **Docker**.
+> Laboratorio académico con carácter Academico y productivo para la **Historia Clínica Electrónica Interoperable** en Colombia, integrando **datos maestros**, **validación de calidad**, **HL7-FHIR R4** y despliegue con **Docker**.
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-blue?logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)](https://www.docker.com/)
+[![HL7-FHIR](https://img.shields.io/badge/HL7-FHIR-R4-orange)](https://www.hl7.org/fhir/)
+[![Great Expectations](https://img.shields.io/badge/Data%20Quality-Great%20Expectations-yellow)](https://greatexpectations.io/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+---
+
+## 📊 Descripción
+
+Este laboratorio está diseñado para enseñar y experimentar con **Datos Maestros (MDM)**, **Metadatos**, **Calidad de Datos**, **Data Warehouse (DW)** y **Business Intelligence (BI)** en un contexto realista de **interoperabilidad en salud** bajo el estándar **HL7 FHIR R4**.
+
+Incluye:
+
+- 🗄️ Tablas interoperables con 57 campos estructurados.  
+- 📚 Catálogo maestro con steward, sensibilidad legal y normas.  
+- 📊 Validaciones automáticas con `Great Expectations` y `dbt`.  
+- 🧪 Reportes HTML con métricas de calidad y gráficos.  
+- 🌐 Recursos FHIR simulados (`Patient`, `Encounter`, `Condition`, etc.).  
+- 📈 Modelo base para Data Warehouse y analítica BI.  
 
 ---
 
