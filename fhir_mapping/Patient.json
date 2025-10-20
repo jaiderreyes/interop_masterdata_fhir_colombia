@@ -1,0 +1,31 @@
+{
+  "resourceType": "Patient",
+  "id": "1001001001",  // Matches documento_id in usuario table
+  "identifier": [
+    {
+      "system": "http://example.org/patient-ids",
+      "value": "1001001001"
+    }
+  ],
+  "name": [
+    {
+      "use": "official",
+      "text": "Jaider Reyes Herazo"  // nombre_completo
+    }
+  ],
+  "gender": "male",  // sexo -> M
+  "birthDate": "1990-05-12",  // fecha_nacimiento
+  "address": [
+    {
+      "country": "CO",  // pais_residencia (ISO-3166)
+      "city": "Sincelejo",  // municipio_residencia
+      "district": "Urbana"  // zona_residencia
+    }
+  ],
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-disability",
+      "valueString": "None"  // categoria_discapacidad
+    }
+  ]
+}

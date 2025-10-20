@@ -1,0 +1,42 @@
+{
+  "resourceType": "MedicationAdministration",
+  "id": "1",  // tecnologia_id (simplified as int)
+  "status": "completed",
+  "subject": {
+    "reference": "Patient/1001001001"
+  },
+  "encounter": {
+    "reference": "Encounter/1"
+  },
+  "medicationCodeableConcept": {
+    "text": "Lisinopril 10 mg"  // descripcion_medicamento + dosis
+  },
+  "dosage": {
+    "route": {
+      "coding": [
+        {
+          "system": "http://snomed.info/sct",
+          "code": "26643006",  // via_administracion (SNOMED)
+          "display": "Oral route"
+        }
+      ]
+    },
+    "dose": {
+      "value": 10,
+      "unit": "mg",
+      "system": "http://unitsofmeasure.org",
+      "code": "mg"
+    },
+    "text": "10 mg every 24 hours for 30 days"  // frecuencia + dias_tratamiento
+  },
+  "performer": [
+    {
+      "actor": {
+        "reference": "Practitioner/1"  // FK id_personal_salud
+      }
+    }
+  ],
+  "effectivePeriod": {
+    "start": "2025-10-01T08:45:00Z"
+  }
+}

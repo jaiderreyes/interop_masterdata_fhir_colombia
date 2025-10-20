@@ -1,0 +1,243 @@
+# =======================================================================
+#  GREAT EXPECTATIONS CONFIGURACIÓN PRINCIPAL
+#  Laboratorio: interop_masterdata_fhir_colombia
+#  Datasource: interop_db_hcd_catalog
+#  Esquema: hcd
+#  Objetivo: Validación automática de datos maestros y clínicos
+#  Compatible con PostgreSQL y Citus - Python 3.8
+# =======================================================================
+
+datasource_name: interop_db_hcd_catalog
+execution_engine:
+  class_name: SqlAlchemyExecutionEngine
+  connection_string: postgresql://postgres:postgres@localhost:5432/interop_db
+
+data_connectors:
+  default_runtime_data_connector_name:
+    class_name: RuntimeDataConnector
+    batch_identifiers:
+      - default_identifier_name
+
+# =======================================================================
+# EXPECTATION SUITES POR TABLA
+# =======================================================================
+
+expectation_suites:
+
+# -----------------------------------------------------------------------
+# 1. Tabla: usuario  (FHIR: Patient)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_usuario
+  expectations:
+
+    # Clave primaria no nula y única
+    - expect_column_values_to_not_be_null:
+        column: documento_id
+    - expect_column_values_to_be_unique:
+        column: documento_id
+
+    # Campos obligatorios
+    - expect_column_values_to_not_be_null:
+        column: nombre_completo
+    - expect_column_values_to_not_be_null:
+        column: fecha_nacimiento
+    - expect_column_values_to_not_be_null:
+        column: sexo
+
+    # Sexo debe estar en dominio permitido
+    - expect_column_values_to_be_in_set:
+        column: sexo
+        value_set: ["M", "F", "Intersex"]
+
+    # Zona de residencia dominio cerrado
+    - expect_column_values_to_be_in_set:
+        column: zona_residencia
+        value_set: ["Urbana", "Rural", "Dispersa", null]
+
+    # Edad entre 0 y 130
+    - expect_column_values_to_be_between:
+        column: edad
+        min_value: 0
+        max_value: 130
+
+    # País debe estar en catálogo ISO-3166 (validación indirecta)
+    - expect_column_values_to_match_regex:
+        column: pais_nacionalidad
+        regex: "^[A-Z]{2,3}$"
+
+# -----------------------------------------------------------------------
+# 2. Tabla: atencion (FHIR: Encounter)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_atencion
+  expectations:
+
+    # PK y FK válidas
+    - expect_column_values_to_not_be_null:
+        column: atencion_id
+    - expect_column_values_to_be_unique:
+        column: atencion_id
+    - expect_column_values_to_not_be_null:
+        column: documento_id
+
+    # Modalidad de entrega dominio cerrado
+    - expect_column_values_to_be_in_set:
+        column: modalidad_entrega
+        value_set: ["Presencial", "Telemedicina", "Domiciliaria"]
+
+    # Entorno de atención dominio cerrado
+    - expect_column_values_to_be_in_set:
+        column: entorno_atencion
+        value_set: ["Urgencias", "Hospitalización", "Consulta", "UCI", "Procedimiento", "Domiciliaria"]
+
+    # Clasificación de triage
+    - expect_column_values_to_be_in_set:
+        column: clasificacion_triage
+        value_set: ["1", "2", "3", "4", "5", null]
+
+    # Validación temporal: fecha_triage ≥ fecha_ingreso
+    - expect_column_pair_values_A_to_be_greater_than_B:
+        column_A: fecha_triage
+        column_B: fecha_ingreso
+        mostly: 0.9
+
+# -----------------------------------------------------------------------
+# 3. Tabla: tecnologia_salud (FHIR: MedicationAdministration / Procedure)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_tecnologia_salud
+  expectations:
+
+    - expect_column_values_to_not_be_null:
+        column: tecnologia_id
+    - expect_column_values_to_be_unique:
+        column: tecnologia_id
+
+    - expect_column_values_to_not_be_null:
+        column: descripcion_medicamento
+
+    # Vía de administración debe corresponder a un concepto SNOMED (numérico)
+    - expect_column_values_to_match_regex:
+        column: via_administracion
+        regex: "^[0-9]{5,10}$"
+
+    # Días de tratamiento deben estar en rango 0–365
+    - expect_column_values_to_be_between:
+        column: dias_tratamiento
+        min_value: 0
+        max_value: 365
+
+    # Unidades aplicadas ≥ 0
+    - expect_column_values_to_be_between:
+        column: unidades_aplicadas
+        min_value: 0
+
+# -----------------------------------------------------------------------
+# 4. Tabla: diagnostico (FHIR: Condition)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_diagnostico
+  expectations:
+
+    - expect_column_values_to_not_be_null:
+        column: diagnostico_id
+    - expect_column_values_to_be_unique:
+        column: diagnostico_id
+
+    - expect_column_values_to_not_be_null:
+        column: diagnostico_ingreso
+
+    # Diagnósticos deben seguir formato CIE-10 (letra + 2 dígitos opcional)
+    - expect_column_values_to_match_regex:
+        column: diagnostico_ingreso
+        regex: "^[A-Z][0-9]{2}[A-Z0-9]?$"
+
+    - expect_column_values_to_match_regex:
+        column: diagnostico_egreso
+        regex: "^[A-Z][0-9]{2}[A-Z0-9]?$"
+
+    # Tipo de diagnóstico: presuntivo o confirmado
+    - expect_column_values_to_be_in_set:
+        column: tipo_diagnostico_ingreso
+        value_set: ["Presuntivo", "Confirmado", null]
+
+    - expect_column_values_to_be_in_set:
+        column: tipo_diagnostico_egreso
+        value_set: ["Presuntivo", "Confirmado", "Definitivo", null]
+
+# -----------------------------------------------------------------------
+#  5. Tabla: egreso (FHIR: Encounter.dischargeDisposition)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_egreso
+  expectations:
+
+    - expect_column_values_to_not_be_null:
+        column: egreso_id
+    - expect_column_values_to_be_unique:
+        column: egreso_id
+
+    - expect_column_values_to_not_be_null:
+        column: fecha_salida
+    - expect_column_values_to_not_be_null:
+        column: condicion_salida
+
+    # Condición de salida dominio cerrado
+    - expect_column_values_to_be_in_set:
+        column: condicion_salida
+        value_set: ["Vivo", "Mejorado", "Remitido", "Fallecido"]
+
+    # Validación temporal: fecha_salida ≥ fecha_ingreso (join lógico con atencion)
+    - expect_column_pair_values_A_to_be_greater_than_B:
+        column_A: fecha_salida
+        column_B: fecha_ingreso
+        mostly: 0.95
+
+# -----------------------------------------------------------------------
+# 👨‍⚕️ 6. Tabla: profesional_salud (FHIR: Practitioner)
+# -----------------------------------------------------------------------
+- expectation_suite_name: validar_profesional_salud
+  expectations:
+
+    - expect_column_values_to_not_be_null:
+        column: id_personal_salud
+    - expect_column_values_to_be_unique:
+        column: id_personal_salud
+
+    - expect_column_values_to_not_be_null:
+        column: nombre
+    - expect_column_values_to_not_be_null:
+        column: especialidad
+
+    # Nombre debe contener letras y espacios (sin caracteres especiales)
+    - expect_column_values_to_match_regex:
+        column: nombre
+        regex: "^[A-Za-zÁÉÍÓÚáéíóúÑñ\\s]+$"
+
+# =======================================================================
+# 📌 INSTRUCCIONES PARA EJECUTAR VALIDACIONES
+# =======================================================================
+# 1. Inicia el contenedor con la BD interop_db:
+#     docker-compose up -d
+#
+#  2. Accede al contenedor donde tengas Great Expectations instalado:
+#     docker exec -it interop_container bash
+#
+# 3. Ve al directorio de tests:
+#     cd /tests
+#
+# ▶️ 4. Ejecuta un checkpoint de validación por tabla:
+#     great_expectations checkpoint run validar_usuario
+#
+# ▶️ 5. Ejecuta todas las validaciones:
+#     great_expectations checkpoint run validar_atencion
+#     great_expectations checkpoint run validar_tecnologia_salud
+#     great_expectations checkpoint run validar_diagnostico
+#     great_expectations checkpoint run validar_egreso
+#     great_expectations checkpoint run validar_profesional_salud
+#
+#  6. Genera el reporte HTML de resultados:
+#     python tests/validate_data.py
+#
+# 7. Abre el reporte en tu navegador:
+#     file:///reports/ge_report.html
+#
+# Consejo: Puedes automatizar la ejecución con un script en CI/CD
+#    para validar la calidad de datos cada vez que se actualice la BD.
+# =======================================================================

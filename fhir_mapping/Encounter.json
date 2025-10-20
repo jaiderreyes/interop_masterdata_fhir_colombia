@@ -1,0 +1,33 @@
+{
+  "resourceType": "Encounter",
+  "id": "1",  // atencion_id
+  "status": "finished",
+  "class": {
+    "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+    "code": "EMER",  // entorno_atencion -> 'Urgencias'
+    "display": "Emergency"
+  },
+  "subject": {
+    "reference": "Patient/1001001001"  // FK documento_id
+  },
+  "period": {
+    "start": "2025-10-01T08:30:00Z",  // fecha_ingreso
+    "end": "2025-10-01T12:30:00Z"     // fecha_salida (de egreso)
+  },
+  "serviceProvider": {
+    "display": "IPS Centro Salud Sucre"  // entidad_salud
+  },
+  "reasonCode": [
+    {
+      "text": "Chest pain since early morning"  // causa_atencion
+    }
+  ],
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/triage",
+      "valueCodeableConcept": {
+        "text": "Triage level 2"  // clasificacion_triage
+      }
+    }
+  ]
+}

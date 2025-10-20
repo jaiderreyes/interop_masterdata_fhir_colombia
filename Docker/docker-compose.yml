@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: interop_postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: interop_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  hapi:
+    image: hapiproject/hapi:latest
+    container_name: interop_hapi
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  adminer:
+    image: adminer
+    container_name: interop_adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+  interop_container:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: interop_container
+    depends_on:
+      - postgres
+    volumes:
+      - .:/work
+      - ./reports:/reports

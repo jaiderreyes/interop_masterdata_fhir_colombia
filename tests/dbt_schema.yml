@@ -1,0 +1,171 @@
+# =======================================================================
+#  DBT SCHEMA TESTS - INTEROP_MASTERDATA_FHIR_COLOMBIA
+#  Objetivo: Validar integridad, relaciones y dominios de datos en el
+#            esquema hcd del proyecto interop_db.
+#  Compatibilidad: PostgreSQL / Citus - dbt >= 1.6
+#  Autor: Laboratorio académico-productivo
+# =======================================================================
+
+version: 2
+
+models:
+
+# -----------------------------------------------------------------------
+# 🧬 1. usuario (FHIR: Patient)
+# -----------------------------------------------------------------------
+- name: usuario
+  description: "Datos maestros de los pacientes (recurso Patient)."
+  columns:
+    - name: documento_id
+      description: "Identificador único del paciente."
+      tests:
+        - unique
+        - not_null
+
+    - name: nombre_completo
+      description: "Nombre completo del paciente."
+      tests:
+        - not_null
+
+    - name: fecha_nacimiento
+      description: "Fecha de nacimiento debe estar presente."
+      tests:
+        - not_null
+
+    - name: sexo
+      description: "Sexo del paciente. Valores permitidos: M, F, Intersex."
+      tests:
+        - accepted_values:
+            values: ["M", "F", "Intersex"]
+
+    - name: zona_residencia
+      description: "Zona de residencia del paciente."
+      tests:
+        - accepted_values:
+            values: ["Urbana", "Rural", "Dispersa"]
+
+# -----------------------------------------------------------------------
+# 🏥 2. atencion (FHIR: Encounter)
+# -----------------------------------------------------------------------
+- name: atencion
+  description: "Eventos clínicos de atención al paciente (Encounter)."
+  columns:
+    - name: atencion_id
+      description: "Identificador único de la atención."
+      tests:
+        - unique
+        - not_null
+
+    - name: documento_id
+      description: "Debe existir en la tabla usuario."
+      tests:
+        - relationships:
+            to: ref('usuario')
+            field: documento_id
+
+    - name: modalidad_entrega
+      description: "Modalidad de la atención."
+      tests:
+        - accepted_values:
+            values: ["Presencial", "Telemedicina", "Domiciliaria"]
+
+    - name: entorno_atencion
+      description: "Tipo de entorno clínico."
+      tests:
+        - accepted_values:
+            values: ["Urgencias", "Hospitalización", "Consulta", "UCI", "Procedimiento", "Domiciliaria"]
+
+# -----------------------------------------------------------------------
+# 💊 3. tecnologia_salud (FHIR: MedicationAdministration / Procedure)
+# -----------------------------------------------------------------------
+- name: tecnologia_salud
+  description: "Tecnologías en salud usadas en la atención."
+  columns:
+    - name: tecnologia_id
+      description: "Identificador único de tecnología."
+      tests:
+        - unique
+        - not_null
+
+    - name: atencion_id
+      description: "Debe existir en la tabla atencion."
+      tests:
+        - relationships:
+            to: ref('atencion')
+            field: atencion_id
+
+    - name: dias_tratamiento
+      description: "Debe estar entre 0 y 365."
+      tests:
+        - dbt_expectations.expect_column_values_to_be_between:
+            min_value: 0
+            max_value: 365
+
+# -----------------------------------------------------------------------
+# 🩺 4. diagnostico (FHIR: Condition)
+# -----------------------------------------------------------------------
+- name: diagnostico
+  description: "Diagnósticos clínicos asociados a una atención."
+  columns:
+    - name: diagnostico_id
+      description: "Identificador único del diagnóstico."
+      tests:
+        - unique
+        - not_null
+
+    - name: atencion_id
+      description: "Debe existir en la tabla atencion."
+      tests:
+        - relationships:
+            to: ref('atencion')
+            field: atencion_id
+
+    - name: diagnostico_ingreso
+      description: "Código CIE-10 válido."
+      tests:
+        - relationships:
+            to: ref('catalogo_cie10')
+            field: codigo
+
+# -----------------------------------------------------------------------
+# 📋 5. egreso (FHIR: Encounter.dischargeDisposition)
+# -----------------------------------------------------------------------
+- name: egreso
+  description: "Registro del egreso del paciente tras la atención."
+  columns:
+    - name: egreso_id
+      description: "Identificador único del egreso."
+      tests:
+        - unique
+        - not_null
+
+    - name: atencion_id
+      description: "Debe existir en la tabla atencion."
+      tests:
+        - relationships:
+            to: ref('atencion')
+            field: atencion_id
+
+    - name: condicion_salida
+      description: "Condición del paciente al egreso."
+      tests:
+        - accepted_values:
+            values: ["Vivo", "Mejorado", "Remitido", "Fallecido"]
+
+# -----------------------------------------------------------------------
+# 👨‍⚕️ 6. profesional_salud (FHIR: Practitioner)
+# -----------------------------------------------------------------------
+- name: profesional_salud
+  description: "Profesionales que participaron en la atención clínica."
+  columns:
+    - name: id_personal_salud
+      description: "Identificador único del profesional."
+      tests:
+        - unique
+        - not_null
+
+    - name: especialidad
+      description: "Campo obligatorio."
+      tests:
+        - not_null
+
