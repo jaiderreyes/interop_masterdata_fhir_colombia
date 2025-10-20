@@ -1,12 +1,12 @@
 # interop_masterdata_fhir_colombia — Lab README
-**Fecha:** 2025-10-19  
-**Autor:** Equipo académico-productivo (Jaider + GPT Lab)
+**Fecha:** 2025-1-19  
+**Autor:** académico-productivo (Jaider Reyes Herazo)
 
 > Laboratorio académico con carácter productivo para la **Historia Clínica Electrónica Interoperable** en Colombia, integrando **datos maestros**, **validación de calidad**, **HL7-FHIR R4** y despliegue con **Docker**.
 
 ---
 
-## 🎯 Objetivos del laboratorio
+##  Objetivos del laboratorio
 - Construir y gobernar un **catálogo de datos maestros** (con CIE-10, ISO-3166, SNOMED, UCUM).
 - Desplegar un **PostgreSQL** con esquema clínico (`hcd`) y datos de ejemplo.
 - Ejecutar **validaciones automáticas** (script Python 3.8) y generar reporte HTML.
@@ -15,7 +15,7 @@
 
 ---
 
-## 🧾 Marco normativo y técnico
+## Marco normativo y técnico
 - 🇨🇴 Ley 1581 de 2012 — Protección de datos personales.
 - 🇨🇴 Resolución 1995 de 1999 — Manejo de la historia clínica.
 - 🇨🇴 Resolución 866 de 2021 — Historia Clínica Electrónica interoperable (HCEi).
